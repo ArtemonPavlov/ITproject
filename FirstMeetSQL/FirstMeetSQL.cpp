@@ -2,6 +2,7 @@
 #include <string>
 #include <iostream>
 #include <Windows.h>
+#define Pi 3.14;
 
 using namespace std;
 
