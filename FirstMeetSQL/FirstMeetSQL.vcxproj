@@ -127,12 +127,6 @@
     <ClCompile Include="sqlite\shell.c" />
     <ClCompile Include="sqlite\sqlite3.c" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="README.md">
-      <SubType>
-      </SubType>
-    </None>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
