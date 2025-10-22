@@ -27,5 +27,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />
+    <None Include="diag.mdpuml" />
   </ItemGroup>
 </Project>
