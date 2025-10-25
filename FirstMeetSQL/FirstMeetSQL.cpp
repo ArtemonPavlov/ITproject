@@ -20,7 +20,7 @@ bool is_table_empty(sqlite3* db) {
 	return count == 0;
 }
 
-int main(){
+int notmain(){
 	SetConsoleOutputCP(1251);
 	SetConsoleCP(1251);
 	sqlite3* db; //указатель на бд
