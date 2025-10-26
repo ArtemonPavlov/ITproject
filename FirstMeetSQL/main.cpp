@@ -118,12 +118,12 @@ void showAllEmployees(sqlite3* db) {
             const unsigned char* isboss = sqlite3_column_text(stmt, 5);
             int enkey = sqlite3_column_int(stmt, 6);
 
-            cout << setw(10) << id
-                << setw(20) << name
-                << setw(15) << otdel
-                << setw(15) << position
-                << setw(20) << salary
-                << setw(20) << isboss
+            cout << setw(5) << id
+                << setw(30) << name
+                << setw(20) << otdel
+                << setw(20) << position
+                << setw(15) << salary
+                << setw(15) << isboss
                 << setw(15) << enkey << endl;
         }
 
@@ -164,10 +164,34 @@ void showMenu() {
     cout << "Выберите действие: ";
 }
 
+int LogInAlfaVer(sqlite3* db, int enkey) {
+    int res = 0;
+    string enkF = "SELECT position FROM Employees WHERE EnterKey = ?";
+    sqlite3_stmt* stmt;
+
+    if (sqlite3_prepare_v2(db, enkF.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+        sqlite3_bind_int(stmt, 1, enkey);
+
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            const char* pos = (const char*)sqlite3_column_text(stmt, 0);
+            if (pos != nullptr && string(pos) == "Директор") { 
+                res = 1;
+            }
+        } else {
+            cout << "Неверный ключ доступа!";
+            res = -1;
+        }
+        sqlite3_finalize(stmt);
+    }
+
+    return res;
+}
+
 int main() {
     SetConsoleOutputCP(1251);
     SetConsoleCP(1251);
     sqlite3* db;
+    int enkey;
 
     // Открываем базу данных
     if (sqlite3_open("company.db", &db) != SQLITE_OK) {
@@ -178,29 +202,43 @@ int main() {
     // Инициализируем таблицы
     initializeDatabase(db);
 
-    int choice;
-    do {
-        showMenu();
-        cin >> choice;
+    cout << "Введите ваш ключ доступа: ";
+    cin >> enkey;
+    int res1 = LogInAlfaVer(db, enkey);
+    cout << res1 << endl;
+    if (res1 == 1) {
+        cout << "Вы успешно авторизованы под аккаунтом Директора!" << endl;
+        int choice;
+        do {
+            showMenu();
+            cin >> choice;
 
-        switch (choice) {
-        case 1:
-            showAllEmployees(db);
-            break;
-        case 2:
-            addEmployee(db);
-            break;
-        case 3:
-            deleteEmployee(db);
-            break;
-        case 4:
-            cout << "Выход из программы..." << endl;
-            break;
-        default:
-            cout << "Неверный выбор! Попробуйте снова." << endl;
-        }
+            switch (choice) {
+            case 1:
+                showAllEmployees(db);
+                break;
+            case 2:
+                addEmployee(db);
+                break;
+            case 3:
+                deleteEmployee(db);
+                break;
+            case 4:
+                cout << "Выход из программы..." << endl;
+                break;
+            default:
+                cout << "Неверный выбор! Попробуйте снова." << endl;
+            }
 
-    } while (choice != 4);
+        } while (choice != 4);
+
+    } if (res1 == -1) {
+        int choice1 = 0;
+        do {
+            choice1 += 1;
+        } while (choice1 != 1);
+        //cout << "В разработке..." << endl;
+    }
 
     // Закрываем базу данных
     sqlite3_close(db);
