@@ -329,8 +329,8 @@ int LogInAlfaVer(sqlite3* db, int enkey) {
 }
 
 int main() {
-    //SetConsoleOutputCP(1251);
-    //SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+    SetConsoleCP(1251);
     sqlite3* db;
     int enkey;
 
@@ -462,4 +462,5 @@ int main() {
     cout << "База данных закрыта. До свидания!" << endl;
 
     return 0;
+    //какой то текст дай боб в ютф 8
 }
