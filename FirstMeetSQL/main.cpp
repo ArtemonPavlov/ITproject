@@ -166,6 +166,37 @@ void showAllEmployeesBuh(sqlite3* db) {
     }
 }
 
+//Функция редактирования зарплаты (Бухгатлтер)
+void EditSalary(sqlite3* db) {
+    int id;
+    double newsal;
+    cout << "\n=== Редактирование зарплаты сотрудника ===" << endl;
+    cout << "Введите ID сотрудника для изменения его зарплаты: ";
+    cin >> id;
+
+    string sql = "SELECT salary FROM Employees WHERE id = " + to_string(id) + ";";
+    sqlite3_stmt* stmt;
+
+    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            cout << "Введите новую зарплату сотрудника: ";
+            cin >> newsal;
+
+            string sql2 = "UPDATE Employees SET salary = " + to_string(newsal) + " WHERE id = " + to_string(id) + ";";
+            if (executeSQL(db, sql2)) {
+                cout << "\nЗарплата успешно изменена!\n";
+            }
+            else {
+                cout << "\nОшибка при редактировании зарплаты!\n";
+            }
+        }
+        else {
+            cout << "\nОшибка: неверный id!\n";
+        }
+        sqlite3_finalize(stmt);
+    }
+}
+
 // Функция показа своего отдела
 void ShowUrOtdel(sqlite3* db, string urotd) {
     cout << "\n=== Список всех сотрудников вашего отдела: " + urotd +  " ===" << endl;
@@ -195,7 +226,6 @@ void ShowUrOtdel(sqlite3* db, string urotd) {
                 << setw(15) << salary
                 << setw(15) << enkey << endl;
         }
-
         sqlite3_finalize(stmt);
     }
 }
@@ -245,17 +275,10 @@ void deleteEmployee(sqlite3* db) {
     int id;
 
     cout << "\n=== Удаление сотрудника ===" << endl;
-    showAllEmployees(db);
 
     cout << "Введите ID сотрудника для удаления: ";
     cin >> id;
 
-    /*// Сначала удаляем зарплаты сотрудника (из-за внешнего ключа)
-    string deleteSalaries = "DELETE FROM Salaries WHERE employee_id = " + to_string(id) + ";";
-    executeSQL(db, deleteSalaries);
-    */
-
-    // Затем удаляем самого сотрудника
     string deleteEmployee = "DELETE FROM Employees WHERE id = " + to_string(id) + ";";
 
     if (executeSQL(db, deleteEmployee)) {
@@ -409,7 +432,7 @@ int main() {
                 ShowUrOtdel(db, otdl);
                 break;
             case 3:
-                cout << "\nВ разработке..." << endl;
+                EditSalary(db);
                 break;
             case 4:
                 cout << "Выход из программы..." << endl;
@@ -428,10 +451,10 @@ int main() {
             showMenuBuh();
             cin >> choice;
             if (cin.fail()) {
-                cin.clear(); // Сбрасываем флаг ошибки
+                cin.clear();
                 cin.ignore(10000, '\n');
                 cout << "\nВведено неверное значение! Попробуйте ещё раз." << endl;
-                continue; // Переходим к следующей итерации
+                continue; 
             }
 
             switch (choice) {
@@ -442,7 +465,7 @@ int main() {
                 ShowU(db, tlid);
                 break;
             case 3:
-                cout << "\nВ разработке..." << endl;
+                EditSalary(db);
                 break;
             case 4:
                 cout << "Выход из программы..." << endl;
@@ -462,5 +485,4 @@ int main() {
     cout << "База данных закрыта. До свидания!" << endl;
 
     return 0;
-    //какой то текст дай боб в ютф 8
 }
