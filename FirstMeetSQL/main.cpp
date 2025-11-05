@@ -171,6 +171,7 @@ void showAllEmployees(sqlite3* db) {
     }
 }
 
+// Функция редактирования данных (Директор)
 void editdatafunc(sqlite3* db, string column, string newdata, int id) {
     string sql2 = "UPDATE Employees SET '" + column + "' = '" + newdata + "' WHERE id = " + to_string(id) + ";";
     if (executeSQL(db, sql2)) {
@@ -181,7 +182,7 @@ void editdatafunc(sqlite3* db, string column, string newdata, int id) {
     }
 }
 
-// Функция редактирования данных (Директор)
+// Функция редактирования данных. Менюшка. (Директор)
 void EditData(sqlite3* db) {
     int id, choice;
     cout << "\n=== Редактирование данных сотрудника ===" << endl;
@@ -380,8 +381,8 @@ void deleteEmployee(sqlite3* db) {
 // Главное меню Бухгалтера
 void showMenuBuh() {
     cout << "\n========== СИСТЕМА УПРАВЛЕНИЯ СОТРУДНИКАМИ ==========" << endl;
-    cout << "1. Показать всех сотрудников" << endl;
-    cout << "2. Показать свои данные" << endl;
+    cout << "1. Показать свои данные" << endl;
+    cout << "2. Показать всех сотрудников" << endl;
     cout << "3. Редактировать зарплату сотрудника (по id)" << endl;
     cout << "4. Выход" << endl;
     cout << "Выберите действие: ";
@@ -390,21 +391,23 @@ void showMenuBuh() {
 // Главное меню Главного Бухгалтера
 void showMenuGlBuh() {
     cout << "\n========== СИСТЕМА УПРАВЛЕНИЯ СОТРУДНИКАМИ ==========" << endl;
-    cout << "1. Показать всех сотрудников" << endl;
-    cout << "2. Показать всех бухгалтеров" << endl;
-    cout << "3. Редактировать зарплату сотрудника (по id)" << endl;
-    cout << "4. Выход" << endl;
+    cout << "1. Показать свои данные" << endl;
+    cout << "2. Показать всех сотрудников" << endl;
+    cout << "3. Показать всех бухгалтеров" << endl;
+    cout << "4. Редактировать зарплату сотрудника (по id)" << endl;
+    cout << "5. Выход" << endl;
     cout << "Выберите действие: ";
 }
 
 // Главное меню Директора
 void showMenuBoss() {
     cout << "\n========== СИСТЕМА УПРАВЛЕНИЯ СОТРУДНИКАМИ ==========" << endl;
-    cout << "1. Показать всех сотрудников" << endl;
-    cout << "2. Добавить сотрудника" << endl;
-    cout << "3. Удалить сотрудника" << endl;
-    cout << "4. Редактировать данные сотрудника (по id)" << endl;
-    cout << "5. Выход" << endl;
+    cout << "1. Показать свои данные" << endl;
+    cout << "2. Показать всех сотрудников" << endl;
+    cout << "3. Добавить сотрудника" << endl;
+    cout << "4. Удалить сотрудника" << endl;
+    cout << "5. Редактировать данные сотрудника (по id)" << endl;
+    cout << "6. Выход" << endl;
     cout << "Выберите действие: ";
 }
 
@@ -461,31 +464,78 @@ int main() {
     cin >> enkey;
     int res1 = LogInAlfaVer(db, enkey);
     cout << res1 << endl;
+    // Директор
     if (res1 == 1) {
-        cout << "Вы успешно авторизованы под аккаунтом Директора!" << endl;
+        cout << "Вы успешно авторизованы!" << endl;
         int choice;
         do {
             showMenuBoss();
             cin >> choice;
             if (cin.fail()) {
-                cin.clear(); // Сбрасываем флаг ошибки
+                cin.clear(); 
                 cin.ignore(10000, '\n');
                 cout << "\nВведено неверное значение! Попробуйте ещё раз." << endl;
-                continue; // Переходим к следующей итерации
+                continue; 
             }
 
             switch (choice) {
             case 1:
-                showAllEmployees(db);
+                ShowU(db, tlid);
                 break;
             case 2:
-                addEmployee(db);
+                showAllEmployees(db);
                 break;
             case 3:
-                deleteEmployee(db);
+                addEmployee(db);
                 break;
             case 4:
+                deleteEmployee(db);
+                break;
+            case 5:
                 EditData(db);
+                break;
+            case 6:
+                cout << "Выход из программы..." << endl;
+                tlid = 0;
+                break;
+            default:
+                cout << "\nНеверный выбор! Попробуйте снова." << endl;
+            }
+
+        } while (choice != 6);
+    } 
+    // Неверный ключ
+    else if (res1 == -1) {
+        int choice1 = 0;
+        do {choice1 += 1;} while (choice1 != 1);
+    }
+    // Главный бухгалтер
+    else if (res1 == 2) {
+        cout << "Вы успешно авторизованы под аккаунтом!" << endl;
+        int choice;
+        do {
+            string otdl = "Бухгалтерия";
+            showMenuGlBuh();
+            cin >> choice;
+            if (cin.fail()) {
+                cin.clear();
+                cin.ignore(10000, '\n');
+                cout << "\nВведено неверное значение! Попробуйте ещё раз." << endl;
+                continue; 
+            }
+
+            switch (choice) {
+            case 1:
+                ShowU(db, tlid);
+                break;
+            case 2:
+                showAllEmployeesBuh(db);
+                break;
+            case 3:
+                ShowUrOtdel(db, otdl);
+                break;
+            case 4:
+                EditSalary(db);
                 break;
             case 5:
                 cout << "Выход из программы..." << endl;
@@ -494,48 +544,11 @@ int main() {
             default:
                 cout << "\nНеверный выбор! Попробуйте снова." << endl;
             }
-
         } while (choice != 5);
-    } 
-    else if (res1 == -1) {
-        int choice1 = 0;
-        do {choice1 += 1;} while (choice1 != 1);
     }
-    else if (res1 == 2) {
-        cout << "Вы успешно авторизованы под аккаунтом Главного Бухгалтера!" << endl;
-        int choice;
-        do {
-            string otdl = "Бухгалтерия";
-            showMenuGlBuh();
-            cin >> choice;
-            if (cin.fail()) {
-                cin.clear(); // Сбрасываем флаг ошибки
-                cin.ignore(10000, '\n');
-                cout << "\nВведено неверное значение! Попробуйте ещё раз." << endl;
-                continue; // Переходим к следующей итерации
-            }
-
-            switch (choice) {
-            case 1:
-                showAllEmployeesBuh(db);
-                break;
-            case 2:
-                ShowUrOtdel(db, otdl);
-                break;
-            case 3:
-                EditSalary(db);
-                break;
-            case 4:
-                cout << "Выход из программы..." << endl;
-                tlid = 0;
-                break;
-            default:
-                cout << "\nНеверный выбор! Попробуйте снова." << endl;
-            }
-        } while (choice != 4);
-    }
+    // Бухгалтер
     else if (res1 == 3) {
-        cout << "Вы успешно авторизованы под аккаунтом Бухгалтера!" << endl;
+        cout << "Вы успешно авторизованы!" << endl;
         int choice;
         do {
             string otdl = "Бухгалтерия";
@@ -550,10 +563,10 @@ int main() {
 
             switch (choice) {
             case 1:
-                showAllEmployeesBuh(db);
+                ShowU(db, tlid);
                 break;
             case 2:
-                ShowU(db, tlid);
+                showAllEmployeesBuh(db);
                 break;
             case 3:
                 EditSalary(db);
