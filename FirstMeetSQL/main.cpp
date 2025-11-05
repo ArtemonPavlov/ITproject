@@ -28,68 +28,16 @@ void initializeDatabase(sqlite3* db) {
     // Таблица сотрудников
     string createEmployees =
         "CREATE TABLE IF NOT EXISTS Employees ("
-        "    id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "    id INTEGER PRIMARY KEY,"
         "    FIO TEXT NOT NULL,"
-        "    otdel TEXT NOT NULL,"   
+        "    otdel TEXT NOT NULL,"
         "    position TEXT NOT NULL,"
         "    salary REAL NOT NULL,"
         "    isBoss TEXT NOT NULL,"
-        "    EnterKey INTEGER NOT NULL"  
+        "    EnterKey INTEGER NOT NULL"
         ");";
 
     executeSQL(db, createEmployees);
-}
-
-// Функция для добавления сотрудника
-void addEmployee(sqlite3* db) {
-    srand(time(nullptr));
-    string fio, otdel, position, isboss;
-    double salary;
-    int enkey;
-
-    cout << "\n=== Добавление нового сотрудника ===" << endl;
-
-    cout << "Введите ФИО сотрудника: ";
-    cin.ignore();
-    getline(cin, fio);
-
-    cout << "Введите отдел, куда будет назначен сотрудник: ";
-    getline(cin, otdel);
-
-    cout << "Введите должность сотрудника: ";
-    getline(cin, position);
-
-    cout << "Введите зарплату сотрудника (тыс. руб./мес.): ";
-    cin >> salary;
-
-    cout << "Будет ли сотрудник начальником отдела? (да/нет): ";
-    cin.ignore();
-    getline(cin, isboss);
-
-    enkey = rand() % 10000;
-    cout << "Ключ сотрудника: " << enkey << endl;
-
-    // Создаем SQL запрос с параметрами
-    sqlite3_stmt* stmt;
-    string sql = "INSERT INTO Employees (FIO, otdel, position, salary, isBoss, EnterKey) VALUES (?, ?, ?, ?, ?, ?);";
-
-    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
-        sqlite3_bind_text(stmt, 1, fio.c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 2, otdel.c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 3, position.c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_double(stmt, 4, salary);
-        sqlite3_bind_text(stmt, 5, isboss.c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_int(stmt, 6, enkey);
-
-        if (sqlite3_step(stmt) == SQLITE_DONE) {
-            cout << "Сотрудник успешно добавлен!" << endl;
-        }
-        else {
-            cout << "Ошибка при добавлении сотрудника!" << endl;
-        }
-
-        sqlite3_finalize(stmt);
-    }
 }
 
 // Функция показа ваших данных
@@ -127,8 +75,176 @@ void ShowU(sqlite3* db, int urid) {
                 << setw(15) << isboss
                 << setw(15) << enkey << endl;
         }
-
         sqlite3_finalize(stmt);
+    }
+}
+
+// Функция показа своего отдела
+void ShowUrOtdel(sqlite3* db, string urotd) {
+    cout << "\n=== Список всех сотрудников вашего отдела: " + urotd + " ===" << endl;
+
+    sqlite3_stmt* stmt;
+    string sql = "SELECT id, FIO, position, salary, EnterKey FROM Employees WHERE otdel = ? ORDER BY id;";
+    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+        sqlite3_bind_text(stmt, 1, urotd.c_str(), -1, SQLITE_STATIC);
+
+        cout << left << setw(10) << "ID"
+            << setw(30) << "ФИО"
+            << setw(25) << "Должность"
+            << setw(15) << "Зарплата"
+            << setw(15) << "Ключ доступа" << endl;
+        cout << "---------------------------------------------------------------------------------------------------------" << endl;
+
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            int id = sqlite3_column_int(stmt, 0);
+            const unsigned char* name = sqlite3_column_text(stmt, 1);
+            const unsigned char* position = sqlite3_column_text(stmt, 2);
+            double salary = sqlite3_column_double(stmt, 3);
+            int enkey = sqlite3_column_int(stmt, 4);
+
+            cout << setw(5) << id
+                << setw(30) << name
+                << setw(30) << position
+                << setw(15) << salary
+                << setw(15) << enkey << endl;
+        }
+        sqlite3_finalize(stmt);
+    }
+}
+
+// Функция редактирования своего ключа доступа
+void EditEnterKey(sqlite3* db, int oldkey, int id) {
+    int newkey, uek;
+    cout << "\n=== Редактирование ключа доступа ===" << endl;
+    cout << "Введите текущий ключ доступа: ";
+    cin >> uek;
+
+    if (uek == oldkey) {
+        cout << "Введите новый ключ доступа (любое целое число больше 1000): ";
+        cin >> newkey;
+        if (cin.good() && newkey > 1000) {
+            string sql2 = "UPDATE Employees SET EnterKey = " + to_string(newkey) + " WHERE id = " + to_string(id) + ";";
+            if (executeSQL(db, sql2)) {
+                cout << "\nКлюч доступа успешно изменён!\n";
+            }
+            else {
+                cout << "\nОшибка при редактировании ключа доступа!\n";
+            }
+        }
+        else {
+            cout << "\nВведено неверное значение!\n";
+        }
+        
+    }
+    else {
+        cout << "\nВведён неверный ключ доступа!\n";
+    }
+}
+
+// Функция показа своего начальника (Обычный Работник)
+void ShowUrBoss(sqlite3* db, string urotd) {
+    string isb = "да", nfio;
+    sqlite3_stmt* stmt;
+    string sql = "SELECT FIO FROM Employees WHERE otdel = ? AND isBoss = ?;";
+    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+        sqlite3_bind_text(stmt, 1, urotd.c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 2, isb.c_str(), -1, SQLITE_STATIC);
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            const char* temp_nfio = (const char*)sqlite3_column_text(stmt, 0);
+            if (temp_nfio != nullptr) {
+                nfio = temp_nfio;
+                cout << "\nНачальника вашего отдела зовут " << nfio << endl;
+            }
+        }
+        sqlite3_finalize(stmt);
+    }
+}
+
+// Функция для добавления сотрудника (Директор)
+void addEmployee(sqlite3* db) {
+    srand(time(nullptr));
+    string fio, otdel, position, isboss;
+    double salary;
+    int enkey, new_id = 0;
+
+    cout << "\n=== Добавление нового сотрудника ===" << endl;
+
+    string max_id_sql = "SELECT MAX(id) FROM Employees;";
+    sqlite3_stmt* stmt0;
+
+    if (sqlite3_prepare_v2(db, max_id_sql.c_str(), -1, &stmt0, nullptr) == SQLITE_OK) {
+        if (sqlite3_step(stmt0) == SQLITE_ROW) {
+            new_id = sqlite3_column_int(stmt0, 0) + 1;
+        }
+        sqlite3_finalize(stmt0);
+    }
+
+    cout << "Введите ФИО сотрудника: ";
+    cin.ignore();
+    getline(cin, fio);
+
+    cout << "Введите отдел, куда будет назначен сотрудник: ";
+    getline(cin, otdel);
+
+    cout << "Введите должность сотрудника: ";
+    getline(cin, position);
+
+    cout << "Введите зарплату сотрудника (тыс. руб./мес.): ";
+    cin >> salary;
+    if (cin.good()) {
+
+        cout << "Будет ли сотрудник начальником отдела? (да/нет)(*любые другие введённые значения будут восприняты как 'нет'): ";
+        cin.ignore();
+        getline(cin, isboss);
+        if (isboss != "да" && isboss != "нет") {
+            isboss = "нет";
+        }
+
+        enkey = rand() % (100000 - 1000 + 1) + 1000;
+        cout << "Ключ сотрудника: " << enkey << endl;
+
+        sqlite3_stmt* stmt;
+        string sql = "INSERT INTO Employees (id, FIO, otdel, position, salary, isBoss, EnterKey) VALUES (?, ?, ?, ?, ?, ?, ?);";
+
+        if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+            sqlite3_bind_double(stmt, 1, new_id);
+            sqlite3_bind_text(stmt, 2, fio.c_str(), -1, SQLITE_STATIC);
+            sqlite3_bind_text(stmt, 3, otdel.c_str(), -1, SQLITE_STATIC);
+            sqlite3_bind_text(stmt, 4, position.c_str(), -1, SQLITE_STATIC);
+            sqlite3_bind_double(stmt, 5, salary);
+            sqlite3_bind_text(stmt, 6, isboss.c_str(), -1, SQLITE_STATIC);
+            sqlite3_bind_int(stmt, 7, enkey);
+
+            if (sqlite3_step(stmt) == SQLITE_DONE) {
+                cout << "Сотрудник успешно добавлен!" << endl;
+            }
+            else {
+                cout << "Ошибка при добавлении сотрудника!" << endl;
+            }
+
+            sqlite3_finalize(stmt);
+        }
+    }
+    else {
+        cout << "\nВведено неверное значение!\n";
+        cin.clear();
+        cin.ignore(10000, '\n');
+    }
+}
+
+// Функция для удаления сотрудника (Директор)
+void deleteEmployee(sqlite3* db) {
+    int id;
+
+    cout << "\n=== Удаление сотрудника ===" << endl;
+
+    cout << "Введите ID сотрудника для удаления: ";
+    cin >> id;
+
+    string deleteEmployee = "DELETE FROM Employees WHERE id = " + to_string(id) + ";";
+
+    if (executeSQL(db, deleteEmployee)) {
+        cout << "Сотрудник удалён!" << endl;
     }
 }
 
@@ -253,7 +369,7 @@ void EditData(sqlite3* db) {
                 cout << "Возврат в главное меню..." << endl;
                 break;
             default:
-                cout << "❌ Неверный выбор!" << endl;
+                cout << "Неверный выбор!" << endl;
             }
         }
         else {
@@ -329,62 +445,35 @@ void EditSalary(sqlite3* db) {
     }
 }
 
-// Функция показа своего отдела
-void ShowUrOtdel(sqlite3* db, string urotd) {
-    cout << "\n=== Список всех сотрудников вашего отдела: " + urotd +  " ===" << endl;
-
-    sqlite3_stmt* stmt;
-    string sql = "SELECT id, FIO, position, salary, EnterKey FROM Employees WHERE otdel = ? ORDER BY id;";
-    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
-        sqlite3_bind_text(stmt, 1, urotd.c_str(), -1, SQLITE_STATIC);
-
-        cout << left << setw(10) << "ID"
-            << setw(30) << "ФИО"
-            << setw(25) << "Должность"
-            << setw(15) << "Зарплата"
-            << setw(15) << "Ключ доступа" << endl;
-        cout << "---------------------------------------------------------------------------------------------------------" << endl;
-
-        while (sqlite3_step(stmt) == SQLITE_ROW) {
-            int id = sqlite3_column_int(stmt, 0);
-            const unsigned char* name = sqlite3_column_text(stmt, 1);
-            const unsigned char* position = sqlite3_column_text(stmt, 2);
-            double salary = sqlite3_column_double(stmt, 3);
-            int enkey = sqlite3_column_int(stmt, 4);
-
-            cout << setw(5) << id
-                << setw(30) << name
-                << setw(30) << position
-                << setw(15) << salary
-                << setw(15) << enkey << endl;
-        }
-        sqlite3_finalize(stmt);
-    }
+// Главное меню Обычного Работника
+void showMenuEmpl() {
+    cout << "\n========== СИСТЕМА УПРАВЛЕНИЯ СОТРУДНИКАМИ ==========" << endl;
+    cout << "1. Показать свои данные" << endl;
+    cout << "2. Показать начальника своего отдела" << endl;
+    cout << "3. Редактировать свой ключ доступа" << endl;
+    cout << "4. Выход" << endl;
+    cout << "Выберите действие: ";
 }
 
-// Функция для удаления сотрудника
-void deleteEmployee(sqlite3* db) {
-    int id;
-
-    cout << "\n=== Удаление сотрудника ===" << endl;
-
-    cout << "Введите ID сотрудника для удаления: ";
-    cin >> id;
-
-    string deleteEmployee = "DELETE FROM Employees WHERE id = " + to_string(id) + ";";
-
-    if (executeSQL(db, deleteEmployee)) {
-        cout << "Сотрудник удалён!" << endl;
-    }
+// Главное меню Начальнка Отдела
+void showMenuBossEmpl() {
+    cout << "\n========== СИСТЕМА УПРАВЛЕНИЯ СОТРУДНИКАМИ ==========" << endl;
+    cout << "1. Показать свои данные" << endl;
+    cout << "2. Показать сотрудников своего отдела" << endl;
+    cout << "3. Редактировать свой ключ доступа" << endl;
+    cout << "4. Выход" << endl;
+    cout << "Выберите действие: ";
 }
 
 // Главное меню Бухгалтера
 void showMenuBuh() {
     cout << "\n========== СИСТЕМА УПРАВЛЕНИЯ СОТРУДНИКАМИ ==========" << endl;
     cout << "1. Показать свои данные" << endl;
-    cout << "2. Показать всех сотрудников" << endl;
-    cout << "3. Редактировать зарплату сотрудника (по id)" << endl;
-    cout << "4. Выход" << endl;
+    cout << "2. Показать начальника своего отдела" << endl;
+    cout << "3. Редактировать свой ключ доступа" << endl;
+    cout << "4. Показать всех сотрудников" << endl;
+    cout << "5. Редактировать зарплату сотрудника (по id)" << endl;
+    cout << "6. Выход" << endl;
     cout << "Выберите действие: ";
 }
 
@@ -392,10 +481,11 @@ void showMenuBuh() {
 void showMenuGlBuh() {
     cout << "\n========== СИСТЕМА УПРАВЛЕНИЯ СОТРУДНИКАМИ ==========" << endl;
     cout << "1. Показать свои данные" << endl;
-    cout << "2. Показать всех сотрудников" << endl;
-    cout << "3. Показать всех бухгалтеров" << endl;
-    cout << "4. Редактировать зарплату сотрудника (по id)" << endl;
-    cout << "5. Выход" << endl;
+    cout << "2. Показать всех бухгалтеров" << endl;
+    cout << "3. Редактировать свой ключ доступа" << endl;
+    cout << "4. Показать всех сотрудников" << endl;
+    cout << "5. Редактировать зарплату сотрудника (по id)" << endl;
+    cout << "6. Выход" << endl;
     cout << "Выберите действие: ";
 }
 
@@ -403,17 +493,20 @@ void showMenuGlBuh() {
 void showMenuBoss() {
     cout << "\n========== СИСТЕМА УПРАВЛЕНИЯ СОТРУДНИКАМИ ==========" << endl;
     cout << "1. Показать свои данные" << endl;
-    cout << "2. Показать всех сотрудников" << endl;
-    cout << "3. Добавить сотрудника" << endl;
-    cout << "4. Удалить сотрудника" << endl;
-    cout << "5. Редактировать данные сотрудника (по id)" << endl;
-    cout << "6. Выход" << endl;
+    cout << "2. Показать сотрудников своего отдела" << endl;
+    cout << "3. Редактировать свой ключ доступа" << endl;
+    cout << "4. Показать всех сотрудников" << endl;
+    cout << "5. Добавить сотрудника" << endl;
+    cout << "6. Удалить сотрудника" << endl;
+    cout << "7. Редактировать данные сотрудника (по id)" << endl;
+    cout << "8. Выход" << endl;
     cout << "Выберите действие: ";
 }
 
-int tlid = 0;
+// Система авторизации
+int tpid = 0;
 
-int LogInAlfaVer(sqlite3* db, int enkey) {
+int LogIn(sqlite3* db, int enkey) {
     int res = 0;
     string enkF = "SELECT id, otdel, position, isBoss FROM Employees WHERE EnterKey = ?";
     sqlite3_stmt* stmt;
@@ -422,7 +515,7 @@ int LogInAlfaVer(sqlite3* db, int enkey) {
         sqlite3_bind_int(stmt, 1, enkey);
 
         if (sqlite3_step(stmt) == SQLITE_ROW) {
-            tlid = (int)sqlite3_column_int(stmt, 0);
+            tpid = (int)sqlite3_column_int(stmt, 0);
             const char* otd = (const char*)sqlite3_column_text(stmt, 1);
             const char* pos = (const char*)sqlite3_column_text(stmt, 2);
             const char* isb = (const char*)sqlite3_column_text(stmt, 3);
@@ -434,6 +527,12 @@ int LogInAlfaVer(sqlite3* db, int enkey) {
             }
             else if (string(otd) == "Бухгалтерия" && string(isb) == "нет") {
                 res = 3;
+            }
+            else if (string(otd) != "Бухгалтерия" && string(isb) == "нет") {
+                res = 4;
+            }
+            else if (string(otd) != "Бухгалтерия" && string(isb) == "да") {
+                res = 5;
             }
         } else {
             cout << "Неверный ключ доступа!\n";
@@ -462,13 +561,26 @@ int main() {
 
     cout << "Введите ваш ключ доступа: ";
     cin >> enkey;
-    int res1 = LogInAlfaVer(db, enkey);
+    int res1 = LogIn(db, enkey);
     cout << res1 << endl;
     // Директор
     if (res1 == 1) {
         cout << "Вы успешно авторизованы!" << endl;
         int choice;
+        string otdl;
         do {
+            string getotd = "SELECT otdel FROM Employees WHERE EnterKey = ?";
+            sqlite3_stmt* stmt;
+            if (sqlite3_prepare_v2(db, getotd.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+                sqlite3_bind_int(stmt, 1, enkey);
+                if (sqlite3_step(stmt) == SQLITE_ROW) {
+                    const char* temp_otd = (const char*)sqlite3_column_text(stmt, 0);
+                    if (temp_otd != nullptr) {
+                        otdl = temp_otd;
+                    }
+                }
+                sqlite3_finalize(stmt);
+            }
             showMenuBoss();
             cin >> choice;
             if (cin.fail()) {
@@ -480,29 +592,35 @@ int main() {
 
             switch (choice) {
             case 1:
-                ShowU(db, tlid);
+                ShowU(db, tpid);
                 break;
             case 2:
-                showAllEmployees(db);
+                ShowUrOtdel(db, otdl);
                 break;
             case 3:
-                addEmployee(db);
+                EditEnterKey(db, enkey, tpid);
                 break;
             case 4:
-                deleteEmployee(db);
+                showAllEmployees(db);
                 break;
             case 5:
-                EditData(db);
+                addEmployee(db);
                 break;
             case 6:
+                deleteEmployee(db);
+                break;
+            case 7:
+                EditData(db);
+                break;
+            case 8:
                 cout << "Выход из программы..." << endl;
-                tlid = 0;
+                tpid = 0;
                 break;
             default:
                 cout << "\nНеверный выбор! Попробуйте снова." << endl;
             }
 
-        } while (choice != 6);
+        } while (choice != 8);
     } 
     // Неверный ключ
     else if (res1 == -1) {
@@ -526,25 +644,28 @@ int main() {
 
             switch (choice) {
             case 1:
-                ShowU(db, tlid);
+                ShowU(db, tpid);
                 break;
             case 2:
-                showAllEmployeesBuh(db);
-                break;
-            case 3:
                 ShowUrOtdel(db, otdl);
                 break;
+            case 3:
+                EditEnterKey(db, enkey, tpid);
+                break;
             case 4:
-                EditSalary(db);
+                showAllEmployeesBuh(db);
                 break;
             case 5:
+                EditSalary(db);
+                break;
+            case 6:
                 cout << "Выход из программы..." << endl;
-                tlid = 0;
+                tpid = 0;
                 break;
             default:
                 cout << "\nНеверный выбор! Попробуйте снова." << endl;
             }
-        } while (choice != 5);
+        } while (choice != 6);
     }
     // Бухгалтер
     else if (res1 == 3) {
@@ -563,25 +684,120 @@ int main() {
 
             switch (choice) {
             case 1:
-                ShowU(db, tlid);
+                ShowU(db, tpid);
                 break;
             case 2:
-                showAllEmployeesBuh(db);
+                ShowUrBoss(db, otdl);
                 break;
             case 3:
+                EditEnterKey(db, enkey, tpid);
+                break;
+            case 4:
+                showAllEmployeesBuh(db);
+                break;
+            case 5:
                 EditSalary(db);
+                break;
+            case 6:
+                cout << "Выход из программы..." << endl;
+                tpid = 0;
+                break;
+            default:
+                cout << "\nНеверный выбор! Попробуйте снова." << endl;
+            }
+        } while (choice != 6);
+    }
+    // Обычный работяга
+    else if (res1 == 4) {
+        cout << "Вы успешно авторизованы!" << endl;
+        int choice;
+        string otd;
+        do {
+            string getotd = "SELECT otdel FROM Employees WHERE EnterKey = ?";
+            sqlite3_stmt* stmt;
+            if (sqlite3_prepare_v2(db, getotd.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+                sqlite3_bind_int(stmt, 1, enkey);
+                if (sqlite3_step(stmt) == SQLITE_ROW) { 
+                    const char* temp_otd = (const char*)sqlite3_column_text(stmt, 0);
+                    if (temp_otd != nullptr) {
+                        otd = temp_otd;
+                    }
+                }
+                sqlite3_finalize(stmt);
+            }
+            showMenuEmpl();
+            cin >> choice;
+            if (cin.fail()) {
+                cin.clear();
+                cin.ignore(10000, '\n');
+                cout << "\nВведено неверное значение! Попробуйте ещё раз." << endl;
+                continue;
+            }
+
+            switch (choice) {
+            case 1:
+                ShowU(db, tpid);
+                break;
+            case 2:
+                ShowUrBoss(db, otd);
+                break;
+            case 3:
+                EditEnterKey(db, enkey, tpid);
                 break;
             case 4:
                 cout << "Выход из программы..." << endl;
-                tlid = 0;
+                tpid = 0;
                 break;
             default:
                 cout << "\nНеверный выбор! Попробуйте снова." << endl;
             }
         } while (choice != 4);
     }
-    else {
-        cout << "В разработке..." << endl;
+    // Начальник отдела
+    else if (res1 == 5) {
+        cout << "Вы успешно авторизованы!" << endl;
+        int choice;
+        string otd;
+        do {
+            string getotd = "SELECT otdel FROM Employees WHERE EnterKey = ?";
+            sqlite3_stmt* stmt;
+            if (sqlite3_prepare_v2(db, getotd.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+                sqlite3_bind_int(stmt, 1, enkey);
+                if (sqlite3_step(stmt) == SQLITE_ROW) {
+                    const char* temp_otd = (const char*)sqlite3_column_text(stmt, 0);
+                    if (temp_otd != nullptr) {
+                        otd = temp_otd;
+                    }
+                }
+                sqlite3_finalize(stmt);
+            }
+            showMenuBossEmpl();
+            cin >> choice;
+            if (cin.fail()) {
+                cin.clear();
+                cin.ignore(10000, '\n');
+                cout << "\nВведено неверное значение! Попробуйте ещё раз." << endl;
+                continue;
+            }
+
+            switch (choice) {
+            case 1:
+                ShowU(db, tpid);
+                break;
+            case 2:
+                ShowUrOtdel(db, otd);
+                break;
+            case 3:
+                EditEnterKey(db, enkey, tpid);
+                break;
+            case 4:
+                cout << "Выход из программы..." << endl;
+                tpid = 0;
+                break;
+            default:
+                cout << "\nНеверный выбор! Попробуйте снова." << endl;
+            }
+        } while (choice != 4);
     }
 
     // Закрываем базу данных
