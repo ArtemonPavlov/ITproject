@@ -6,6 +6,7 @@
 #include <Windows.h>
 #include <cstdlib>
 #include <ctime>
+#include "export_manager.h"
 
 using namespace std;
 
