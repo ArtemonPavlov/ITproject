@@ -121,7 +121,7 @@ bool ExportManager::exportToJSON(const vector<map<string, string>>& data, const 
     ofstream file(filename);
     if (!file.is_open()) return false;
 
-    file << "[\n";
+    file << "{\n";
     for (size_t i = 0; i < data.size(); i++) {
         file << "  {";
         size_t j = 0;
@@ -133,7 +133,7 @@ bool ExportManager::exportToJSON(const vector<map<string, string>>& data, const 
         if (i < data.size() - 1) file << ",";
         file << "\n";
     }
-    file << "]\n";
+    file << "}\n";
 
     file.close();
     return true;
@@ -172,7 +172,6 @@ bool ExportManager::exportToXML(const vector<map<string, string>>& data, const s
     ofstream file(filename);
     if (!file.is_open()) return false;
 
-    file << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
     file << "<" << tableName << "_data>\n";
 
     for (const auto& row : data) {

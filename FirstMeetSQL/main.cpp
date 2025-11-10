@@ -500,7 +500,8 @@ void showMenuBoss() {
     cout << "5. Добавить сотрудника" << endl;
     cout << "6. Удалить сотрудника" << endl;
     cout << "7. Редактировать данные сотрудника (по id)" << endl;
-    cout << "8. Выход" << endl;
+    cout << "8. Выгрузить отчёт о данных сотрудников (JSON,CSV,XML,YAML)" << endl;
+    cout << "9. Выход" << endl;
     cout << "Выберите действие: ";
 }
 
@@ -614,6 +615,9 @@ int main() {
                 EditData(db);
                 break;
             case 8:
+                ExportManager::exportTableToAllFormats(db, "Employees");
+                break;
+            case 9:
                 cout << "Выход из программы..." << endl;
                 tpid = 0;
                 break;
@@ -621,7 +625,7 @@ int main() {
                 cout << "\nНеверный выбор! Попробуйте снова." << endl;
             }
 
-        } while (choice != 8);
+        } while (choice != 9);
     } 
     // Неверный ключ
     else if (res1 == -1) {
