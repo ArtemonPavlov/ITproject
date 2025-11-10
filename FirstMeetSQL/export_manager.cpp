@@ -250,7 +250,7 @@ bool ExportManager::exportTableToAllFormats(sqlite3* db, const string& tableName
     }
 
     if (!exportToYAML(data, "out/data.yaml")) {
-        cout << "❌ Ошибка экспорта в YAML" << endl;
+        cout << "Ошибка экспорта в YAML" << endl;
         success = false;
     }
     else {
