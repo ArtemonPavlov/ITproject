@@ -21,6 +21,6 @@ ___
 [![bls](https://img.plantuml.biz/plantuml/svg/TP1BYi9054NdWUpX3SqMT62s8XWmu8zOujHKe7iYAcx0BPGXmVYBMxXlHzu4RRe7FQltxgdBgGeNPf2OvMJiUxvdOZEE14TTezOlb9fgAd38rNAnHeKp78CAbU296ZVTS5KZvzgYvBpplRQngKkYUJGmqiM1G8r2S2MnrMyuGS76LArcB7AzN_Xg55EYys6brR2w4UI24stEAFk1n0io3uOsaEdCS2ZW0j_hOl_7zotNtF_7k0s4NGuNbfGyFKZSDViHrgpNl6isRpp3Q3haXxq0)](https://editor.plantuml.com/uml/TP1BYi9054NdWUpX3SqMT62s8XWmu8zOujHKe7iYAcx0BPGXmVYBMxXlHzu4RRe7FQltxgdBgGeNPf2OvMJiUxvdOZEE14TTezOlb9fgAd38rNAnHeKp78CAbU296ZVTS5KZvzgYvBpplRQngKkYUJGmqiM1G8r2S2MnrMyuGS76LArcB7AzN_Xg55EYys6brR2w4UI24stEAFk1n0io3uOsaEdCS2ZW0j_hOl_7zotNtF_7k0s4NGuNbfGyFKZSDViHrgpNl6isRpp3Q3haXxq0)
 ___
 ## ER-диаграмма
-![ER diag](docs/ERdiag.jpg)
+![ER diag](docs/ER.jpg)
 ___
 ***Проект реализован на языке C++ с использованием платформы Visual Studio и библиотеки SQLite***
