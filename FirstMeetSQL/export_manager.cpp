@@ -212,7 +212,7 @@ bool ExportManager::exportTableToAllFormats(sqlite3* db, const string& tableName
         return false;
     }
 
-    cout << " Экспорт таблицы '" << tableName << "'..." << endl;
+    cout << "\n Экспорт таблицы '" << tableName << "'..." << endl;
 
     auto data = getTableData(db, tableName);
     auto columns = getTableColumns(db, tableName);

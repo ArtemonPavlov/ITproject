@@ -564,7 +564,6 @@ int main() {
     cout << "Введите ваш ключ доступа: ";
     cin >> enkey;
     int res1 = LogIn(db, enkey);
-    cout << res1 << endl;
     // Директор
     if (res1 == 1) {
         cout << "Вы успешно авторизованы!" << endl;
